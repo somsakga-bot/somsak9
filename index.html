@@ -298,7 +298,7 @@
       document.getElementById('date').setAttribute('min', todayString());
 
       // ลิงก์ไปยังชีท somsak01
-      google.script.run
+      if (serverReady()) google.script.run
         .withSuccessHandler(function (url) {
           var a = document.getElementById('sheetLink');
           a.href = url;
@@ -322,7 +322,8 @@
 
     // ===== กลับหน้าหลัก / พิมพ์รายงาน =====
     // ถ้ามีหน้าหลักของระบบอื่น ให้ใส่ลิงก์ที่นี่ เช่น 'https://example.com/' (เว้นว่าง = รีเฟรชหน้าแดชบอร์ดนี้)
-    var HOME_URL = 'https://script.google.com/macros/s/AKfycbxQYRi-mIOQcR11oO2J2idkujORojH1l4XrkP9hbsQaVfegSKGjfnDv66ePYHTtbFW4/exec';
+    var HOME_URL = '';
+
     document.getElementById('homeBtn').addEventListener('click', function () {
       if (HOME_URL) { window.open(HOME_URL, '_top'); return; }
       showView('homeView');
@@ -340,6 +341,7 @@
     // ===== แดชบอร์ด =====
     function loadDashboard() {
       var list = document.getElementById('list');
+      if (!serverReady()) { list.innerHTML = '<div class="empty">เชื่อมต่อระบบไม่ได้</div>'; return; }
       list.innerHTML = '<div class="empty">กำลังโหลดข้อมูล...</div>';
       google.script.run
         .withSuccessHandler(renderDashboard)
@@ -414,6 +416,21 @@
     document.getElementById('startTime').addEventListener('change', updateEndTimeSlots);
     document.getElementById('bookingForm').addEventListener('submit', handleSubmit);
 
+    // ตรวจว่าเปิดผ่านลิงก์ Web App ของ Apps Script จริงหรือไม่ (ถ้าไม่ใช่ google.script.run จะไม่มี)
+    function serverReady() {
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        showMessage('หน้านี้ไม่ได้เปิดผ่านลิงก์ Web App ของ Apps Script (ลิงก์ที่ลงท้าย /exec) จึงเชื่อมต่อชีทไม่ได้', 'error');
+        return false;
+      }
+      return true;
+    }
+    function failSelect(sel, text) {
+      sel.innerHTML = '<option value="">-- ' + text + ' --</option>';
+      sel.disabled = true;
+    }
+    function errText(error) { return (error && error.message) ? error.message : String(error); }
+    var slotReq = 0, endReq = 0;
+
     // เวลาเริ่มที่ว่าง (ดึงการจองของห้อง+วันที่ที่เลือก แล้วเหลือเฉพาะช่วงที่ว่าง)
     function updateAvailableSlots() {
       var room = getRoomValue();
@@ -430,13 +447,29 @@
         return;
       }
 
+      if (!serverReady()) { failSelect(startSel, 'เชื่อมต่อระบบไม่ได้'); return; }
       startSel.innerHTML = '<option value="">-- กำลังโหลด... --</option>';
       startSel.disabled = true;
 
+      var reqId = ++slotReq;
+      var timer = setTimeout(function () {
+        if (reqId !== slotReq) return;
+        slotReq++; // ไม่รับผลที่ตอบกลับมาทีหลัง
+        failSelect(startSel, 'โหลดไม่สำเร็จ ลองเลือกห้อง/วันที่ใหม่');
+        showMessage('ระบบไม่ตอบสนอง กรุณาลองใหม่อีกครั้ง', 'error');
+      }, 20000);
+
       google.script.run
-        .withSuccessHandler(function (slots) { fillSelect(startSel, slots, '-- เลือกเวลาเริ่ม --'); })
+        .withSuccessHandler(function (slots) {
+          if (reqId !== slotReq) return;
+          clearTimeout(timer);
+          fillSelect(startSel, slots, '-- เลือกเวลาเริ่ม --');
+        })
         .withFailureHandler(function (error) {
-          showMessage('เกิดข้อผิดพลาดในการโหลดเวลาที่ว่าง', 'error');
+          if (reqId !== slotReq) return;
+          clearTimeout(timer);
+          failSelect(startSel, 'โหลดไม่สำเร็จ');
+          showMessage('โหลดเวลาที่ว่างไม่ได้: ' + errText(error), 'error');
           console.error(error);
         })
         .getAvailableTimeSlots(date, room);
@@ -454,13 +487,29 @@
         return;
       }
 
+      if (!serverReady()) { failSelect(endSel, 'เชื่อมต่อระบบไม่ได้'); return; }
       endSel.innerHTML = '<option value="">-- กำลังโหลด... --</option>';
       endSel.disabled = true;
 
+      var reqId = ++endReq;
+      var timer = setTimeout(function () {
+        if (reqId !== endReq) return;
+        endReq++;
+        failSelect(endSel, 'โหลดไม่สำเร็จ ลองเลือกเวลาเริ่มใหม่');
+        showMessage('ระบบไม่ตอบสนอง กรุณาลองใหม่อีกครั้ง', 'error');
+      }, 20000);
+
       google.script.run
-        .withSuccessHandler(function (times) { fillSelect(endSel, times, '-- เลือกเวลาจบ --'); })
+        .withSuccessHandler(function (times) {
+          if (reqId !== endReq) return;
+          clearTimeout(timer);
+          fillSelect(endSel, times, '-- เลือกเวลาจบ --');
+        })
         .withFailureHandler(function (error) {
-          showMessage('เกิดข้อผิดพลาดในการโหลดเวลาจบ', 'error');
+          if (reqId !== endReq) return;
+          clearTimeout(timer);
+          failSelect(endSel, 'โหลดไม่สำเร็จ');
+          showMessage('โหลดเวลาจบไม่ได้: ' + errText(error), 'error');
           console.error(error);
         })
         .getAvailableEndTimes(date, room, startTime);
