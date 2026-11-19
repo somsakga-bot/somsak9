@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจองห้องประชุม ภ.จว.ปราจีนบุรี</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pink: #f0502a;
+      --ink: #2b1a12;
+      --muted: #94766a;
+      --line: #f6e4da;
+      --green: #16a34a;
+      --grad: linear-gradient(45deg, #ffb347 0%, #ff7a18 35%, #f0502a 68%, #e1306c 100%);
+      --grad-title: linear-gradient(90deg, #e1306c 0%, #f0502a 45%, #ff7a18 100%);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Kanit', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ffb347 0%, #ff7a18 30%, #f0502a 62%, #e1306c 100%);
+      background-attachment: fixed;
+      display: flex;
+      justify-content: center;
+      padding: 24px 14px;
+      color: var(--ink);
+    }
+    .container {
+      width: 100%;
+      max-width: 520px;
+      align-self: flex-start;
+      background: #fff;
+      border-radius: 24px;
+      padding: 34px 24px 26px;
+      box-shadow: 0 24px 60px rgba(120, 30, 0, 0.32);
+      animation: rise 0.5s ease-out;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    h1 {
+      text-align: center; font-size: 26px; font-weight: 600; line-height: 1.4;
+      background: var(--grad-title); -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; margin-bottom: 4px;
+    }
+    .subtitle { text-align: center; font-size: 15px; font-weight: 300; color: var(--muted); margin-bottom: 22px; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ปุ่มหลัก */
+    .btn {
+      width: 100%; padding: 14px; background: var(--grad); color: #fff; border: none; border-radius: 12px;
+      font-family: 'Kanit', sans-serif; font-size: 17px; font-weight: 500; cursor: pointer;
+      box-shadow: 0 6px 18px rgba(240, 80, 42, 0.40); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(240, 80, 42, 0.50); }
+    .btn:focus-visible { outline: 3px solid rgba(232, 72, 28, 0.45); outline-offset: 2px; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-ghost {
+      background: #fff; color: var(--pink); border: 2px solid var(--line); box-shadow: none;
+      font-size: 14px; padding: 9px; margin-bottom: 18px;
+    }
+
+    /* สรุปตัวเลข */
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0 8px; }
+    .stat { background: #fff6f0; border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-align: center; }
+    .stat b {
+      display: block; font-size: 28px; font-weight: 600; line-height: 1.2;
+      background: var(--grad-title); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat span { font-size: 13px; color: var(--muted); font-weight: 300; }
+
+    .section-title { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px; font-weight: 500; font-size: 16px; }
+    .refresh { background: none; border: none; color: var(--pink); font-family: 'Kanit', sans-serif; font-size: 13px; cursor: pointer; }
+
+    /* รายการจอง (แนวตั้ง) */
+    .day-label { font-size: 13px; font-weight: 500; color: var(--pink); margin: 14px 0 6px; }
+    .card {
+      display: flex; gap: 12px; padding: 12px 14px; margin-bottom: 8px;
+      border: 1px solid var(--line); border-left: 5px solid #ff7a18; border-radius: 14px; background: #fff;
+    }
+    .card .time { min-width: 62px; font-weight: 600; font-size: 15px; line-height: 1.3; }
+    .card .time small { display: block; font-weight: 300; color: var(--muted); font-size: 13px; }
+    .card .info { flex: 1; min-width: 0; }
+    .card .room { display: inline-block; font-size: 12px; color: #fff; background: var(--grad); border-radius: 20px; padding: 1px 10px; margin-bottom: 3px; }
+    .card .subject { font-weight: 500; font-size: 15px; word-break: break-word; }
+    .card .meta { font-size: 13px; color: var(--muted); font-weight: 300; word-break: break-word; }
+    .card .ok { color: var(--green); font-size: 22px; font-weight: 700; align-self: center; }
+    .empty { text-align: center; color: var(--muted); font-weight: 300; padding: 26px 0; }
+
+    /* ฟอร์ม */
+    .form-group { margin-bottom: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+    label span { color: var(--pink); }
+    input, select, textarea {
+      width: 100%; padding: 11px 14px; border: 2px solid var(--line); background: #fff; border-radius: 12px;
+      font-family: 'Kanit', sans-serif; font-size: 15px; color: var(--ink); transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    textarea { resize: vertical; min-height: 70px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(240, 80, 42, 0.18); }
+    input::placeholder, textarea::placeholder { color: #c9b0a2; font-weight: 300; }
+    input:disabled, select:disabled { opacity: 0.55; cursor: not-allowed; background: #fcf6f2; }
+    #otherRoomGroup { display: none; }
+
+    .loading { display: none; text-align: center; margin-top: 18px; }
+    .spinner {
+      width: 36px; height: 36px; margin: 0 auto 10px; border: 3px solid rgba(240, 80, 42, 0.2);
+      border-top-color: var(--pink); border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { color: var(--muted); font-weight: 300; }
+
+    .message { display: none; padding: 12px 16px; margin-top: 18px; border-radius: 12px; text-align: center; font-size: 14px; }
+    .success { background: #e8f8ee; color: #14633a; border: 1px solid #bfe9cf; }
+    .error { background: #fdece6; color: #a3270a; border: 1px solid #f8c6b6; }
+
+    /* ลิงก์ดูข้อมูล (สีเขียว อยู่กลาง) */
+    .footer { display: flex; justify-content: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .footer a {
+      font-size: 17px; font-weight: 500; color: var(--green); text-decoration: none;
+      border-bottom: 2px solid var(--green); padding-bottom: 2px;
+    }
+    .footer a:hover { opacity: 0.8; }
+    .footer a.disabled { pointer-events: none; opacity: 0.5; border-bottom-color: transparent; }
+
+
+    /* แถบปุ่มหน้าแดชบอร์ด */
+    .toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .toolbar .btn-ghost { margin-bottom: 0; }
+    .toolbar.single { grid-template-columns: 1fr; }
+    .print-only { display: none; }
+
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      body { background: #fff !important; padding: 0; display: block; min-height: 0; }
+      .container { max-width: none; box-shadow: none; border-radius: 0; padding: 0; animation: none; }
+      h1, .stat b { -webkit-text-fill-color: #000; color: #000; background: none; }
+      h1 { font-size: 20px; }
+      .toolbar, .refresh, .footer, #goBookBtn, #formView, #message, .subtitle { display: none !important; }
+      .print-only { display: block; text-align: center; font-size: 13px; color: #444; margin-bottom: 10px; }
+      .stats { margin: 10px 0; }
+      .stat { background: #fff; border: 1px solid #999; }
+      .card { break-inside: avoid; page-break-inside: avoid; border: 1px solid #999; border-left: 4px solid #555; }
+      .card .room { background: none; color: #000; border: 1px solid #555; }
+      .day-label { color: #000; break-after: avoid; }
+      .card .ok { color: #000; }
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 26px 16px 22px; }
+      h1 { font-size: 22px; }
+      .row { grid-template-columns: 1fr; gap: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ระบบจองห้องประชุม<br>ภ.จว.ปราจีนบุรี</h1>
+
+    <!-- ===== หน้าแดชบอร์ด ===== -->
+    <div id="homeView" class="view active">
+      <p class="subtitle">แดชบอร์ดการจองห้องประชุม</p>
+      <p class="print-only" id="printMeta"></p>
+      <div class="toolbar" id="homeToolbar">
+        <button type="button" class="btn btn-ghost" id="homeBtn">&#127968; กลับหน้าหลัก</button>
+        <button type="button" class="btn btn-ghost" id="printBtn">&#128424; พิมพ์รายงาน</button>
+      </div>
+      <button type="button" class="btn" id="goBookBtn">เข้าจองห้องประชุมที่นี่</button>
+
+      <div class="stats">
+        <div class="stat"><b id="statToday">-</b><span>จองวันนี้</span></div>
+        <div class="stat"><b id="statUpcoming">-</b><span>จองที่กำลังจะถึง</span></div>
+      </div>
+
+      <div class="section-title">
+        <span>รายการจองล่าสุด</span>
+        <button type="button" class="refresh" id="refreshBtn">รีเฟรช</button>
+      </div>
+      <div id="list"><div class="empty">กำลังโหลดข้อมูล...</div></div>
+    </div>
+
+    <!-- ===== หน้าฟอร์มจอง ===== -->
+    <div id="formView" class="view">
+      <button type="button" class="btn btn-ghost" id="backBtn">&larr; กลับหน้าหลัก</button>
+      <p class="subtitle">กรอกข้อมูลเพื่อบันทึกการจองห้องประชุม</p>
+
+      <form id="bookingForm">
+        <div class="form-group">
+          <label for="room">ห้องประชุม <span>*</span></label>
+          <select id="room" name="room" required>
+            <option value="">-- กรุณาเลือกห้อง --</option>
+            <option value="ห้องประชุมใหญ่">ห้องประชุมใหญ่</option>
+            <option value="ห้อง cctv">ห้อง cctv</option>
+            <option value="ห้อง ศปก.">ห้อง ศปก.</option>
+            <option value="ห้องประชุมอเนกประสงค์">ห้องประชุมอเนกประสงค์</option>
+            <option value="OTHER">ห้องอื่นๆ (ระบุ)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="otherRoomGroup">
+          <label for="otherRoom">ระบุชื่อห้อง <span>*</span></label>
+          <input type="text" id="otherRoom" placeholder="เช่น ห้องประชุมชั้น 2">
+        </div>
+
+        <div class="form-group">
+          <label for="date">วันที่ประชุม <span>*</span></label>
+          <input type="date" id="date" name="date" required>
+        </div>
+
+        <div class="row">
+          <div class="form-group">
+            <label for="startTime">เวลาเริ่ม <span>*</span></label>
+            <select id="startTime" name="startTime" required disabled>
+              <option value="">-- เลือกห้องและวันที่ก่อน --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="endTime">เวลาจบ <span>*</span></label>
+            <select id="endTime" name="endTime" required disabled>
+              <option value="">-- เลือกเวลาเริ่มก่อน --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="subject">เรื่อง <span>*</span></label>
+          <input type="text" id="subject" name="subject" required placeholder="หัวข้อการประชุม">
+        </div>
+        <div class="form-group">
+          <label for="inviter">หน่วยเชิญประชุม</label>
+          <input type="text" id="inviter" name="inviter" placeholder="หน่วยงานที่เป็นผู้เชิญประชุม">
+        </div>
+        <div class="form-group">
+          <label for="chair">ประธาน</label>
+          <input type="text" id="chair" name="chair" placeholder="ชื่อประธานการประชุม">
+        </div>
+        <div class="form-group">
+          <label for="jointUnit">หน่วยร่วมประชุม</label>
+          <input type="text" id="jointUnit" name="jointUnit" placeholder="หน่วยงานที่เข้าร่วมประชุม">
+        </div>
+        <div class="form-group">
+          <label for="attendees">ผู้ร่วมประชุม</label>
+          <textarea id="attendees" name="attendees" placeholder="รายชื่อหรือจำนวนผู้เข้าร่วมประชุม"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="name">ผู้จอง <span>*</span></label>
+          <input type="text" id="name" name="name" required placeholder="ชื่อ-นามสกุล ผู้จอง">
+        </div>
+        <div class="form-group">
+          <label for="tel">เบอร์โทร <span>*</span></label>
+          <input type="tel" id="tel" name="tel" required pattern="[0-9\-]{9,12}" placeholder="0812345678">
+        </div>
+        <div class="form-group">
+          <label for="note">หมายเหตุ</label>
+          <textarea id="note" name="note" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"></textarea>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">บันทึกการจอง</button>
+      </form>
+
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>กำลังประมวลผล...</p>
+      </div>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <div class="footer">
+      <a id="sheetLink" class="disabled" href="#" target="_blank" rel="noopener">ดูข้อมูลการจองห้อง</a>
+    </div>
+  </div>
+
+  <script>
+    var DEFAULT_START = '<option value="">-- เลือกห้องและวันที่ก่อน --</option>';
+    var DEFAULT_END = '<option value="">-- เลือกเวลาเริ่มก่อน --</option>';
+    var THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+    function todayString() {
+      var t = new Date();
+      return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+    }
+
+    function thaiDate(s) {
+      var p = s.split('-');
+      if (p.length !== 3) return s;
+      return parseInt(p[2], 10) + ' ' + THAI_MONTHS[parseInt(p[1], 10) - 1] + ' ' + (parseInt(p[0], 10) + 543);
+    }
+
+    window.onload = function () {
+      document.getElementById('date').setAttribute('min', todayString());
+
+      // ลิงก์ไปยังชีท somsak01
+      google.script.run
+        .withSuccessHandler(function (url) {
+          var a = document.getElementById('sheetLink');
+          a.href = url;
+          a.classList.remove('disabled');
+        })
+        .getSheetUrl();
+
+      loadDashboard();
+    };
+
+    // ===== สลับหน้า =====
+    function showView(id) {
+      document.getElementById('homeView').classList.toggle('active', id === 'homeView');
+      document.getElementById('formView').classList.toggle('active', id === 'formView');
+      hideMessage();
+      window.scrollTo(0, 0);
+    }
+    document.getElementById('goBookBtn').addEventListener('click', function () { showView('formView'); });
+    document.getElementById('backBtn').addEventListener('click', function () { showView('homeView'); loadDashboard(); });
+    document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+
+    // ===== กลับหน้าหลัก / พิมพ์รายงาน =====
+    // ถ้ามีหน้าหลักของระบบอื่น ให้ใส่ลิงก์ที่นี่ เช่น 'https://example.com/' (เว้นว่าง = รีเฟรชหน้าแดชบอร์ดนี้)
+    var HOME_URL = '';
+
+    document.getElementById('homeBtn').addEventListener('click', function () {
+      if (HOME_URL) { window.open(HOME_URL, '_top'); return; }
+      showView('homeView');
+      loadDashboard();
+    });
+
+    document.getElementById('printBtn').addEventListener('click', function () {
+      var now = new Date();
+      var hh = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('printMeta').textContent =
+        'รายงานการจองห้องประชุม · พิมพ์เมื่อ ' + thaiDate(todayString()) + ' เวลา ' + hh + ' น.';
+      window.print();
+    });
+
+    // ===== แดชบอร์ด =====
+    function loadDashboard() {
+      var list = document.getElementById('list');
+      list.innerHTML = '<div class="empty">กำลังโหลดข้อมูล...</div>';
+      google.script.run
+        .withSuccessHandler(renderDashboard)
+        .withFailureHandler(function (err) {
+          list.innerHTML = '<div class="empty">โหลดข้อมูลไม่สำเร็จ</div>';
+          console.error(err);
+        })
+        .getDashboardData();
+    }
+
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+
+    function renderDashboard(data) {
+      document.getElementById('statToday').textContent = data.totalToday;
+      document.getElementById('statUpcoming').textContent = data.totalUpcoming;
+
+      var list = document.getElementById('list');
+      list.innerHTML = '';
+      if (data.error) { list.appendChild(el('div', 'empty', 'โหลดข้อมูลไม่สำเร็จ')); return; }
+      if (!data.items.length) { list.appendChild(el('div', 'empty', 'ยังไม่มีรายการจอง')); return; }
+
+      var lastDate = '';
+      data.items.forEach(function (it) {
+        if (it.date !== lastDate) {
+          lastDate = it.date;
+          var label = thaiDate(it.date) + (it.date === data.today ? ' (วันนี้)' : '');
+          list.appendChild(el('div', 'day-label', label));
+        }
+        var card = el('div', 'card');
+
+        var time = el('div', 'time', it.startTime);
+        time.appendChild(el('small', '', '– ' + it.endTime));
+        card.appendChild(time);
+
+        var info = el('div', 'info');
+        info.appendChild(el('span', 'room', it.room));
+        info.appendChild(el('div', 'subject', it.subject || '(ไม่ระบุเรื่อง)'));
+        var meta = [];
+        if (it.chair) meta.push('ประธาน: ' + it.chair);
+        if (it.name) meta.push('ผู้จอง: ' + it.name);
+        if (meta.length) info.appendChild(el('div', 'meta', meta.join(' · ')));
+        card.appendChild(info);
+
+        if (it.approved) card.appendChild(el('div', 'ok', '✔'));
+        list.appendChild(card);
+      });
+    }
+
+    // ===== ฟอร์มจอง =====
+    function getRoomValue() {
+      var room = document.getElementById('room').value;
+      if (room === 'OTHER') {
+        var other = document.getElementById('otherRoom').value.trim();
+        return other ? 'ห้องอื่นๆ: ' + other : '';
+      }
+      return room;
+    }
+
+    document.getElementById('room').addEventListener('change', function () {
+      var isOther = this.value === 'OTHER';
+      document.getElementById('otherRoomGroup').style.display = isOther ? 'block' : 'none';
+      document.getElementById('otherRoom').required = isOther;
+      updateAvailableSlots();
+    });
+    document.getElementById('otherRoom').addEventListener('change', updateAvailableSlots);
+    document.getElementById('date').addEventListener('change', updateAvailableSlots);
+    document.getElementById('startTime').addEventListener('change', updateEndTimeSlots);
+    document.getElementById('bookingForm').addEventListener('submit', handleSubmit);
+
+    // เวลาเริ่มที่ว่าง (ดึงการจองของห้อง+วันที่ที่เลือก แล้วเหลือเฉพาะช่วงที่ว่าง)
+    function updateAvailableSlots() {
+      var room = getRoomValue();
+      var date = document.getElementById('date').value;
+      var startSel = document.getElementById('startTime');
+      var endSel = document.getElementById('endTime');
+
+      endSel.innerHTML = DEFAULT_END;
+      endSel.disabled = true;
+
+      if (!room || !date) {
+        startSel.innerHTML = DEFAULT_START;
+        startSel.disabled = true;
+        return;
+      }
+
+      startSel.innerHTML = '<option value="">-- กำลังโหลด... --</option>';
+      startSel.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(function (slots) { fillSelect(startSel, slots, '-- เลือกเวลาเริ่ม --'); })
+        .withFailureHandler(function (error) {
+          showMessage('เกิดข้อผิดพลาดในการโหลดเวลาที่ว่าง', 'error');
+          console.error(error);
+        })
+        .getAvailableTimeSlots(date, room);
+    }
+
+    function updateEndTimeSlots() {
+      var room = getRoomValue();
+      var date = document.getElementById('date').value;
+      var startTime = document.getElementById('startTime').value;
+      var endSel = document.getElementById('endTime');
+
+      if (!room || !date || !startTime) {
+        endSel.innerHTML = DEFAULT_END;
+        endSel.disabled = true;
+        return;
+      }
+
+      endSel.innerHTML = '<option value="">-- กำลังโหลด... --</option>';
+      endSel.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(function (times) { fillSelect(endSel, times, '-- เลือกเวลาจบ --'); })
+        .withFailureHandler(function (error) {
+          showMessage('เกิดข้อผิดพลาดในการโหลดเวลาจบ', 'error');
+          console.error(error);
+        })
+        .getAvailableEndTimes(date, room, startTime);
+    }
+
+    function fillSelect(select, items, placeholder) {
+      select.innerHTML = '';
+      if (!items || items.length === 0) {
+        select.innerHTML = '<option value="">-- ไม่มีเวลาว่าง --</option>';
+        select.disabled = true;
+        return;
+      }
+      select.innerHTML = '<option value="">' + placeholder + '</option>';
+      items.forEach(function (t) {
+        var opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t + ' น.';
+        select.appendChild(opt);
+      });
+      select.disabled = false;
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+
+      var room = getRoomValue();
+      if (!room) { showMessage('กรุณาเลือกห้องประชุม', 'error'); return; }
+
+      var submitBtn = document.getElementById('submitBtn');
+      var loading = document.querySelector('.loading');
+
+      var formData = {
+        room: room,
+        date: document.getElementById('date').value,
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        subject: document.getElementById('subject').value.trim(),
+        inviter: document.getElementById('inviter').value.trim(),
+        chair: document.getElementById('chair').value.trim(),
+        jointUnit: document.getElementById('jointUnit').value.trim(),
+        attendees: document.getElementById('attendees').value.trim(),
+        name: document.getElementById('name').value.trim(),
+        tel: document.getElementById('tel').value.trim(),
+        note: document.getElementById('note').value.trim()
+      };
+
+      submitBtn.disabled = true;
+      loading.style.display = 'block';
+      hideMessage();
+
+      function done() {
+        submitBtn.disabled = false;
+        loading.style.display = 'none';
+      }
+
+      // server ตรวจสอบการจองซ้ำอีกครั้งใน saveReservation (มี lock กันจองพร้อมกัน)
+      google.script.run
+        .withSuccessHandler(function (result) {
+          if (result.success) {
+            showMessage(result.message, 'success');
+            document.getElementById('bookingForm').reset();
+            document.getElementById('otherRoomGroup').style.display = 'none';
+            document.getElementById('otherRoom').required = false;
+            document.getElementById('startTime').innerHTML = DEFAULT_START;
+            document.getElementById('startTime').disabled = true;
+            document.getElementById('endTime').innerHTML = DEFAULT_END;
+            document.getElementById('endTime').disabled = true;
+            document.getElementById('date').setAttribute('min', todayString());
+            loadDashboard();
+          } else {
+            showMessage(result.message, 'error');
+            updateAvailableSlots();
+          }
+          done();
+        })
+        .withFailureHandler(function (error) {
+          showMessage('เกิดข้อผิดพลาด: ' + error.toString(), 'error');
+          done();
+        })
+        .saveReservation(formData);
+    }
+
+    var messageTimer;
+    function showMessage(text, type) {
+      var div = document.getElementById('message');
+      div.textContent = text;
+      div.className = 'message ' + type;
+      div.style.display = 'block';
+      clearTimeout(messageTimer);
+      messageTimer = setTimeout(hideMessage, 5000);
+    }
+    function hideMessage() {
+      document.getElementById('message').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
