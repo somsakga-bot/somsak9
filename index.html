@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ภารกิจของผู้บังคับบัญชา ภ.จว.ปราจีนบุรี</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--c:#1a237e}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Sarabun','Noto Sans Thai',sans-serif;background:#f1f3f8;color:#222;font-size:16px}
+header{background:var(--c);color:#fff;padding:14px 10px;text-align:center}
+header h1{margin:0;font-size:1.25rem}header small{opacity:.85}
+main{max-width:900px;margin:0 auto;padding:12px}
+button{font-family:inherit;font-size:1rem;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;color:#fff;background:var(--c)}
+button.gr{background:#607d8b}button.rd{background:#c62828}
+.gcard{display:block;width:100%;text-align:left;margin:10px 0;padding:18px;font-size:1.15rem;font-weight:700;color:#fff;border-radius:12px}
+.gcard small{display:block;font-weight:400;opacity:.9}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:center}
+select,input,textarea{font-family:inherit;font-size:1rem;padding:8px;border:1px solid #bbb;border-radius:6px;width:100%}
+.bar select{width:auto;flex:1}
+.tabs button{background:#ddd;color:#333}.tabs button.on{background:var(--c);color:#fff}
+.card{background:#fff;border-radius:10px;padding:12px;margin:10px 0;box-shadow:0 1px 4px #0002}
+.card .tt{font-weight:700;font-size:1.1rem}.card div{margin:2px 0}.card .btns{margin-top:8px;display:flex;gap:6px}
+.card .btns button{padding:6px 12px;font-size:.9rem}
+.blink{animation:bl 1s infinite;border:2px solid red}
+@keyframes bl{50%{background:#ffe0e0}}
+#banner{display:none;background:#c62828;color:#fff;padding:10px;font-weight:700;animation:bb 1s infinite}
+@keyframes bb{50%{opacity:.25}}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:#fff;padding:4px;border-radius:8px}
+.cal .h{text-align:center;font-weight:700;font-size:.8rem;padding:4px 0}
+.cal .d{min-height:62px;border:1px solid #e0e0e0;padding:2px;font-size:.7rem;cursor:pointer;overflow:hidden}
+.cal .d.sel{outline:2px solid var(--c)}.cal .d.today{background:#fffde7}
+.cal .d b{font-size:.8rem}
+.chip{display:block;color:#fff;border-radius:3px;padding:0 3px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend span{display:inline-block;margin:2px 8px 2px 0;font-size:.85rem}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:3px;vertical-align:middle}
+#modal{display:none;position:fixed;inset:0;background:#0007;overflow:auto;z-index:9}
+#modal .box{background:#fff;max-width:560px;margin:10px auto;padding:14px;border-radius:10px}
+#modal label{display:block;margin-top:8px;font-weight:700;font-size:.9rem}
+.printonly{display:none}
+@media print{
+ body{background:#fff}.noprint,header,#banner{display:none!important}.printonly{display:block}
+ .card{box-shadow:none;border:1px solid #999;break-inside:avoid}
+ body[data-print=list] #calbox,body[data-print=one] #calbox,body[data-print=one] .card:not(.only){display:none}
+ body[data-print=cal] #listbox{display:none}
+ .cal .d{min-height:80px}
+}
+.monthList{display:none}@media print{body[data-print=cal] .monthList{display:block}}
+</style></head>
+<body>
+<header><h1>ภารกิจของผู้บังคับบัญชา ภ.จว.ปราจีนบุรี</h1><small>บันทึกและติดตามภารกิจ 5 กลุ่ม</small></header>
+<div id="banner"></div>
+<main id="app"></main>
+
+<div id="modal"><div class="box" id="form"></div></div>
+
+<script>
+const API='วาง_URL_WEB_APP_ที่ได้จาก_Apps_Script_ที่นี่';
+const U=['สภ.เมืองปราจีนบุรี','สภ.กบินทร์บุรี','สภ.ศรีมหาโพธิ','สภ.ประจันตคาม','สภ.บ้านสร้าง','สภ.ศรีมโหสถ','สภ.นาดี','สภ.ระเบาะไผ่','สภ.วังตะเคียน','สภ.สระบัว','สภ.วังขอนแดง'];
+const G=[
+{n:'ผบก.-รอง ผบก.',c:'#00796b',m:['พล.ต.ต.ไพทูลย์ พิทักษ์ธรรม','พ.ต.อ.บุญสาน สินทอง','พ.ต.อ.ดำรงค์ อ้วนสูงเนิน','พ.ต.อ.คงศักดิ์ บุญสื่อสุวรรณ','พ.ต.อ.ธนกฤษ พาภิรมย์','พ.ต.อ.ภาสกร ทุนทรัพย์','พ.ต.อ.กิตติพงศ์ พันธ์ศรี']},
+{n:'สภ.ในสังกัด',c:'#3949ab',m:U,p:['ผกก.สภ.','รอง ผกก.ป.','รอง ผกก.สส.','รอง ผกก.สอบสวน']},
+{n:'ฝอ.ภ.จว.ปราจีนบุรี',c:'#6d4c41',m:['พ.ต.อ.สุทธิศักดิ์ ปลื้มจิตต์','พ.ต.ท.พีรกิตติ์ รัตนดาราโชค','พ.ต.ท.กฤษณะ ก้ามสันเทียะ','พ.ต.ท.สมศักย์ กาเผือกงาม']},
+{n:'กก.สส.',c:'#c2185b',m:['พ.ต.อ.กานต์ ประทุมตรี','พ.ต.ท.สมาน บุตรพรม','พ.ต.ท.นุกูล ขันติ']},
+{n:'กลุ่มงานสอบสวน',c:'#455a64',m:['พ.ต.อ.มงคล จันทร์พลอย','พ.ต.อ.สนิท มากมี','พ.ต.อ.สุทัศน์ แปลงสาร']}];
+const T=[{n:'ร่วมประชุม',c:'#d32f2f'},{n:'ร่วมพิธี',c:'#1565c0'},{n:'ร่วมปฏิบัติ',c:'#2e7d32',d:1},{n:'ร่วมกิจกรรม',c:'#ef6c00',d:1},{n:'ร่วมภารกิจอื่นๆ',c:'#7b1fa2',d:1}];
+let D=[],gi=-1,tab='list',cm=new Date(),selDay=null,flt='';
+cm.setDate(1);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>{const d=new Date(s);return isNaN(d)?s:d.toLocaleString('th-TH',{dateStyle:'long',timeStyle:'short'})+' น.'};
+const tp=n=>T.find(x=>x.n==n)||T[4];
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const mins=m=>(Date.now()-new Date(m.datetime))/60000;
+const isBlink=m=>{const d=mins(m);return d>=-60&&d<=30};
+
+async function load(){
+  try{const r=await (await fetch(API+'?t='+Date.now())).json();if(r.ok)D=r.rows;else alert(r.msg)}
+  catch(e){$('#app').innerHTML='<div class="card">เชื่อมต่อ Google Sheet ไม่ได้ ตรวจสอบค่า API ในไฟล์ index.html</div>';return}
+  render();
+}
+async function post(o){
+  try{return await (await fetch(API,{method:'POST',body:JSON.stringify(o)})).json()}catch(e){return{ok:false,msg:'เชื่อมต่อไม่ได้'}}
+}
+function banner(){
+  const b=D.filter(isBlink).sort((a,b)=>a.datetime<b.datetime?-1:1);
+  const el=$('#banner');
+  if(!b.length){el.style.display='none';return}
+  el.style.display='block';
+  el.innerHTML='⏰ ภารกิจใกล้ถึง/กำลังดำเนินการ: '+b.map(m=>`[${G[m.group].n}] ${esc(m.commander)} - ${esc(m.type)} ${new Date(m.datetime).toLocaleTimeString('th-TH',{timeStyle:'short'})} น.`).join(' | ');
+}
+function row(l,v){return v?`<div><b>${l}:</b> ${esc(v)}</div>`:''}
+function card(m){
+  const t=tp(m.type);
+  return `<div class="card ${isBlink(m)?'blink':''}" id="c${m.id}" style="border-left:8px solid ${t.c}">
+  <div class="tt" style="color:${t.c}">${t.n}${m.detail?' : '+esc(m.detail):''}</div>
+  <div><b>${fmt(m.datetime)}</b></div><div>👤 ${esc(m.commander)}</div>
+  ${row('สถานที่',m.place)}${row('ประธาน',m.chair)}${row('หน่วยเจ้าภาพ',m.host)}${row('การแต่งกาย',m.dress)}${row('สิ่งที่ต้องเตรียม',m.prepare)}${row('หมายเหตุ',m.note)}
+  <div style="font-size:.85rem;color:#666">ผู้บันทึก: ${esc(m.recorder)} | บันทึกเมื่อ ${esc(m.recordedAt)}</div>
+  <div class="btns noprint"><button onclick="openForm('${m.id}')">แก้ไข</button><button class="gr" onclick="printOne('${m.id}')">พิมพ์</button><button class="rd" onclick="del('${m.id}')">ลบ</button></div></div>`;
+}
+function mine(){
+  return D.filter(m=>m.group==gi&&(!flt||m.commander.includes(flt))).sort((a,b)=>a.datetime<b.datetime?-1:1);
+}
+function render(){
+  banner();
+  document.documentElement.style.setProperty('--c',gi<0?'#1a237e':G[gi].c);
+  const a=$('#app');
+  if(gi<0){
+    a.innerHTML=G.map((g,i)=>{const n=D.filter(m=>m.group==i&&new Date(m.datetime)>=new Date(Date.now()-864e5)).length;
+      return `<button class="gcard" style="background:${g.c}" onclick="go(${i})">กลุ่มที่ ${i+1} ${g.n}<small>ภารกิจที่ยังไม่ถึง/วันนี้ ${n} รายการ</small></button>`}).join('')
+      +'<div class="legend card">'+T.map(t=>`<span><i style="background:${t.c}"></i>${t.n}</span>`).join('')+'</div>';
+    return;
+  }
+  const g=G[gi],ms=mine();
+  a.innerHTML=`<div class="bar noprint"><button class="gr" onclick="go(-1)">← ย้อนกลับ</button><button onclick="openForm()">+ ลงบันทึกภารกิจ</button><button class="gr" onclick="doPrint()">🖨 พิมพ์</button></div>
+  <div class="printonly"><h2>ภารกิจของผู้บังคับบัญชา ภ.จว.ปราจีนบุรี - ${g.n}</h2></div>
+  <h2 style="color:${g.c};margin:4px 0">${g.n}</h2>
+  <div class="bar noprint"><select onchange="flt=this.value;render()"><option value="">ทุกท่าน/ทุกหน่วย</option>${g.m.map(x=>`<option ${x==flt?'selected':''}>${x}</option>`).join('')}</select></div>
+  <div class="bar tabs noprint"><button class="${tab=='list'?'on':''}" onclick="tab='list';render()">รายการ</button><button class="${tab=='cal'?'on':''}" onclick="tab='cal';render()">ปฏิทิน</button></div>
+  <div id="listbox" style="${tab=='list'?'':'display:none'}">${ms.length?ms.map(card).join(''):'<div class="card">ยังไม่มีข้อมูลภารกิจ</div>'}</div>
+  <div id="calbox" style="${tab=='cal'?'':'display:none'}">${calHTML(ms)}</div>`;
+}
+function calHTML(ms){
+  const y=cm.getFullYear(),mo=cm.getMonth(),first=cm.getDay(),days=new Date(y,mo+1,0).getDate(),td=ymd(new Date());
+  let h=`<div class="bar noprint"><button class="gr" onclick="cm=new Date(${y},${mo-1},1);render()">◀</button><b style="flex:1;text-align:center">${cm.toLocaleDateString('th-TH',{month:'long',year:'numeric'})}</b><button class="gr" onclick="cm=new Date(${y},${mo+1},1);render()">▶</button></div>
+  <div class="printonly"><b>${cm.toLocaleDateString('th-TH',{month:'long',year:'numeric'})}</b></div>
+  <div class="legend">${T.map(t=>`<span><i style="background:${t.c}"></i>${t.n}</span>`).join('')}</div><div class="cal">`;
+  ['อา','จ','อ','พ','พฤ','ศ','ส'].forEach(x=>h+=`<div class="h">${x}</div>`);
+  for(let i=0;i<first;i++)h+='<div></div>';
+  for(let d=1;d<=days;d++){
+    const k=y+'-'+pad(mo+1)+'-'+pad(d),dm=ms.filter(m=>m.datetime.slice(0,10)==k);
+    h+=`<div class="d ${k==td?'today':''} ${k==selDay?'sel':''}" onclick="selDay='${k}';render()"><b>${d}</b>${dm.map(m=>`<span class="chip" style="background:${tp(m.type).c}">${m.datetime.slice(11,16)} ${esc(m.type)}</span>`).join('')}</div>`;
+  }
+  h+='</div>';
+  if(selDay){const dm=ms.filter(m=>m.datetime.slice(0,10)==selDay);h+=`<h3 class="noprint">ภารกิจวันที่ ${fmt(selDay).split(' เวลา')[0].replace(/ \d+:\d+.*/,'')}</h3><div class="noprint">${dm.length?dm.map(card).join(''):'<div class="card">ไม่มีภารกิจ</div>'}</div>`}
+  const pre=y+'-'+pad(mo+1);
+  h+=`<div class="monthList">${ms.filter(m=>m.datetime.startsWith(pre)).map(m=>`<div class="card" style="border-left:8px solid ${tp(m.type).c}"><b>${fmt(m.datetime)}</b> ${esc(m.type)} ${esc(m.detail)} - ${esc(m.commander)}<br>${esc(m.place)} | ประธาน: ${esc(m.chair)} | แต่งกาย: ${esc(m.dress)}</div>`).join('')}</div>`;
+  return h;
+}
+function go(i){gi=i;flt='';tab='list';selDay=null;render();scrollTo(0,0)}
+function doPrint(){document.body.dataset.print=tab;print()}
+function printOne(id){document.body.dataset.print='one';tab='list';const c=$('#c'+id);c.classList.add('only');print();setTimeout(()=>c.classList.remove('only'),500)}
+
+function openForm(id){
+  const g=G[gi],m=id?D.find(x=>x.id==id):{},[u,p]=(m.commander||'').split(' - ');
+  const opt=(a,v)=>a.map(x=>`<option ${x==v?'selected':''}>${x}</option>`).join('');
+  $('#form').innerHTML=`<h3 style="margin:0;color:${g.c}">${id?'แก้ไข':'ลงบันทึก'}ภารกิจ - ${g.n}</h3>
+  <label>${g.p?'หน่วย (สภ.)':'ผู้บังคับบัญชา'}</label><select id="f_u">${opt(g.m,u||m.commander)}</select>
+  ${g.p?`<label>ตำแหน่ง</label><select id="f_p">${opt(g.p,p)}</select>`:''}
+  <label>ประเภทภารกิจ</label><select id="f_type" onchange="typeCh()">${opt(T.map(t=>t.n),m.type)}</select>
+  <div id="f_dw"><label>ระบุ</label><input id="f_detail" value="${esc(m.detail)}"></div>
+  <label>วันเวลา</label><input type="datetime-local" id="f_datetime" value="${esc(m.datetime)}">
+  <label>สถานที่</label><input id="f_place" value="${esc(m.place)}">
+  <label>ประธาน</label><input id="f_chair" value="${esc(m.chair)}">
+  <label>หน่วยเจ้าภาพงาน</label><input id="f_host" value="${esc(m.host)}">
+  <label>การแต่งกาย</label><input id="f_dress" value="${esc(m.dress)}">
+  <label>สิ่งที่ต้องเตรียม</label><textarea id="f_prepare" rows="2">${esc(m.prepare)}</textarea>
+  <label>หมายเหตุ</label><textarea id="f_note" rows="2">${esc(m.note)}</textarea>
+  <label>ผู้บันทึก (ต้องลงชื่อ)</label><input id="f_recorder" value="${esc(m.recorder)}">
+  <label>รหัสเข้าบันทึกข้อมูล</label><input type="password" id="f_code" inputmode="numeric">
+  <div class="bar" style="margin-top:12px"><button class="gr" onclick="closeForm()">← ย้อนกลับ</button><button id="f_save" onclick="save('${id||''}')">บันทึก</button></div>`;
+  $('#modal').style.display='block';typeCh();
+}
+function typeCh(){$('#f_dw').style.display=tp($('#f_type').value).d?'block':'none'}
+function closeForm(){$('#modal').style.display='none'}
+async function save(id){
+  const v=k=>$('#f_'+k).value.trim(),t=v('type'),g=G[gi];
+  const d={id,group:String(gi),commander:g.p?v('u')+' - '+v('p'):v('u'),type:t,detail:tp(t).d?v('detail'):'',datetime:v('datetime'),place:v('place'),chair:v('chair'),host:v('host'),dress:v('dress'),prepare:v('prepare'),note:v('note'),recorder:v('recorder')};
+  if(!d.datetime)return alert('กรุณาระบุวันเวลา');
+  if(!d.recorder)return alert('กรุณาลงชื่อผู้บันทึก');
+  if(tp(t).d&&!d.detail)return alert('กรุณาระบุรายละเอียดของ'+t);
+  $('#f_save').disabled=true;$('#f_save').textContent='กำลังบันทึก...';
+  const r=await post({action:'save',code:v('code'),data:d});
+  if(!r.ok){alert(r.msg);$('#f_save').disabled=false;$('#f_save').textContent='บันทึก';return}
+  closeForm();load();
+}
+async function del(id){
+  if(!confirm('ยืนยันลบภารกิจนี้?'))return;
+  const code=prompt('ใส่รหัส');if(!code)return;
+  const r=await post({action:'delete',code,id});
+  if(!r.ok)return alert(r.msg);
+  load();
+}
+addEventListener('afterprint',()=>{delete document.body.dataset.print});
+setInterval(()=>{banner();document.querySelectorAll('.card').forEach(()=>{});},30000);
+setInterval(()=>{if(gi>=0&&$('#modal').style.display!='block')render()},60000);
+load();
+</script>
+</body></html>
