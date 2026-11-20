@@ -47,14 +47,14 @@ select,input,textarea{font-family:inherit;font-size:1rem;padding:8px;border:1px 
 .monthList{display:none}@media print{body[data-print=cal] .monthList{display:block}}
 </style></head>
 <body>
-<header><h1>ภารกิจของผู้บังคับบัญชา ภ.จว.ปราจีนบุรี</h1><small>การบันทึกและติดตามภารกิจ</small></header>
+<header><h1>ภารกิจของผู้บังคับบัญชา ภ.จว.ปราจีนบุรี</h1><small>บันทึกและติดตามภารกิจ 5 กลุ่ม</small></header>
 <div id="banner"></div>
 <main id="app"></main>
 
 <div id="modal"><div class="box" id="form"></div></div>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbx7cs3GLJCQeWCot5cfB1DVOGkxDfFcr751xKEWk-vGixzn9c3bk5mg-YEHoSyW965l/exec';
+const API='วาง_URL_WEB_APP_ที่ได้จาก_Apps_Script_ที่นี่';
 const U=['สภ.เมืองปราจีนบุรี','สภ.กบินทร์บุรี','สภ.ศรีมหาโพธิ','สภ.ประจันตคาม','สภ.บ้านสร้าง','สภ.ศรีมโหสถ','สภ.นาดี','สภ.ระเบาะไผ่','สภ.วังตะเคียน','สภ.สระบัว','สภ.วังขอนแดง'];
 const G=[
 {n:'ผบก.-รอง ผบก.',c:'#00796b',m:['พล.ต.ต.ไพทูลย์ พิทักษ์ธรรม','พ.ต.อ.บุญสาน สินทอง','พ.ต.อ.ดำรงค์ อ้วนสูงเนิน','พ.ต.อ.คงศักดิ์ บุญสื่อสุวรรณ','พ.ต.อ.ธนกฤษ พาภิรมย์','พ.ต.อ.ภาสกร ทุนทรัพย์','พ.ต.อ.กิตติพงศ์ พันธ์ศรี']},
@@ -95,7 +95,7 @@ function card(m){
   return `<div class="card ${isBlink(m)?'blink':''}" id="c${m.id}" style="border-left:8px solid ${t.c}">
   <div class="tt" style="color:${t.c}">${t.n}${m.detail?' : '+esc(m.detail):''}</div>
   <div><b>${fmt(m.datetime)}</b></div><div>👤 ${esc(m.commander)}</div>
-  ${row('สถานที่',m.place)}${row('ประธาน',m.chair)}${row('หน่วยเจ้าภาพ',m.host)}${row('การแต่งกาย',m.dress)}${row('สิ่งที่ต้องเตรียม',m.prepare)}${row('หมายเหตุ',m.note)}
+  ${row('สถานที่',m.place)}${row('ประธาน',m.chair)}${row('เรื่อง',m.subject)}${row('หน่วยเจ้าภาพ',m.host)}${row('การแต่งกาย',m.dress)}${row('สิ่งที่ต้องเตรียม',m.prepare)}${row('หมายเหตุ',m.note)}
   <div style="font-size:.85rem;color:#666">ผู้บันทึก: ${esc(m.recorder)} | บันทึกเมื่อ ${esc(m.recordedAt)}</div>
   <div class="btns noprint"><button onclick="openForm('${m.id}')">แก้ไข</button><button class="gr" onclick="printOne('${m.id}')">พิมพ์</button><button class="rd" onclick="del('${m.id}')">ลบ</button></div></div>`;
 }
@@ -135,7 +135,7 @@ function calHTML(ms){
   h+='</div>';
   if(selDay){const dm=ms.filter(m=>m.datetime.slice(0,10)==selDay);h+=`<h3 class="noprint">ภารกิจวันที่ ${fmt(selDay).split(' เวลา')[0].replace(/ \d+:\d+.*/,'')}</h3><div class="noprint">${dm.length?dm.map(card).join(''):'<div class="card">ไม่มีภารกิจ</div>'}</div>`}
   const pre=y+'-'+pad(mo+1);
-  h+=`<div class="monthList">${ms.filter(m=>m.datetime.startsWith(pre)).map(m=>`<div class="card" style="border-left:8px solid ${tp(m.type).c}"><b>${fmt(m.datetime)}</b> ${esc(m.type)} ${esc(m.detail)} - ${esc(m.commander)}<br>${esc(m.place)} | ประธาน: ${esc(m.chair)} | แต่งกาย: ${esc(m.dress)}</div>`).join('')}</div>`;
+  h+=`<div class="monthList">${ms.filter(m=>m.datetime.startsWith(pre)).map(m=>`<div class="card" style="border-left:8px solid ${tp(m.type).c}"><b>${fmt(m.datetime)}</b> ${esc(m.type)} ${esc(m.detail)} - ${esc(m.commander)}<br>${esc(m.place)} | ประธาน: ${esc(m.chair)} | เรื่อง: ${esc(m.subject)} | แต่งกาย: ${esc(m.dress)}</div>`).join('')}</div>`;
   return h;
 }
 function go(i){gi=i;flt='';tab='list';selDay=null;render();scrollTo(0,0)}
@@ -153,7 +153,8 @@ function openForm(id){
   <label>วันเวลา</label><input type="datetime-local" id="f_datetime" value="${esc(m.datetime)}">
   <label>สถานที่</label><input id="f_place" value="${esc(m.place)}">
   <label>ประธาน</label><input id="f_chair" value="${esc(m.chair)}">
-  <label>หน่วยงานเจ้าภาพ</label><input id="f_host" value="${esc(m.host)}">
+  <label>เรื่อง</label><input id="f_subject" value="${esc(m.subject)}">
+  <label>หน่วยเจ้าภาพงาน</label><input id="f_host" value="${esc(m.host)}">
   <label>การแต่งกาย</label><input id="f_dress" value="${esc(m.dress)}">
   <label>สิ่งที่ต้องเตรียม</label><textarea id="f_prepare" rows="2">${esc(m.prepare)}</textarea>
   <label>หมายเหตุ</label><textarea id="f_note" rows="2">${esc(m.note)}</textarea>
@@ -166,7 +167,7 @@ function typeCh(){$('#f_dw').style.display=tp($('#f_type').value).d?'block':'non
 function closeForm(){$('#modal').style.display='none'}
 async function save(id){
   const v=k=>$('#f_'+k).value.trim(),t=v('type'),g=G[gi];
-  const d={id,group:String(gi),commander:g.p?v('u')+' - '+v('p'):v('u'),type:t,detail:tp(t).d?v('detail'):'',datetime:v('datetime'),place:v('place'),chair:v('chair'),host:v('host'),dress:v('dress'),prepare:v('prepare'),note:v('note'),recorder:v('recorder')};
+  const d={id,group:String(gi),commander:g.p?v('u')+' - '+v('p'):v('u'),type:t,detail:tp(t).d?v('detail'):'',datetime:v('datetime'),place:v('place'),chair:v('chair'),subject:v('subject'),host:v('host'),dress:v('dress'),prepare:v('prepare'),note:v('note'),recorder:v('recorder')};
   if(!d.datetime)return alert('กรุณาระบุวันเวลา');
   if(!d.recorder)return alert('กรุณาลงชื่อผู้บันทึก');
   if(tp(t).d&&!d.detail)return alert('กรุณาระบุรายละเอียดของ'+t);
