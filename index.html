@@ -47,14 +47,14 @@ select,input,textarea{font-family:inherit;font-size:1rem;padding:8px;border:1px 
 .monthList{display:none}@media print{body[data-print=cal] .monthList{display:block}}
 </style></head>
 <body>
-<header><h1>ภารกิจของผู้บังคับบัญชา ภ.จว.ปราจีนบุรี</h1><small>บันทึกและติดตามภารกิจ 5 กลุ่ม</small></header>
+<header><h1>ภารกิจของผู้บังคับบัญชา ภ.จว.ปราจีนบุรี</h1><small>บันทึกและติดตามภารกิจ</small></header>
 <div id="banner"></div>
 <main id="app"></main>
 
 <div id="modal"><div class="box" id="form"></div></div>
 
 <script>
-const API='วาง_URL_WEB_APP_ที่ได้จาก_Apps_Script_ที่นี่';
+const API='https://script.google.com/macros/s/AKfycbxO1Yy6fB78Ll6PiN39Ij9DmmTWRSoUvbtkuafT518DyvJjfOGUXLvbpIhynGeJe6r_/exec';
 const U=['สภ.เมืองปราจีนบุรี','สภ.กบินทร์บุรี','สภ.ศรีมหาโพธิ','สภ.ประจันตคาม','สภ.บ้านสร้าง','สภ.ศรีมโหสถ','สภ.นาดี','สภ.ระเบาะไผ่','สภ.วังตะเคียน','สภ.สระบัว','สภ.วังขอนแดง'];
 const G=[
 {n:'ผบก.-รอง ผบก.',c:'#00796b',m:['พล.ต.ต.ไพทูลย์ พิทักษ์ธรรม','พ.ต.อ.บุญสาน สินทอง','พ.ต.อ.ดำรงค์ อ้วนสูงเนิน','พ.ต.อ.คงศักดิ์ บุญสื่อสุวรรณ','พ.ต.อ.ธนกฤษ พาภิรมย์','พ.ต.อ.ภาสกร ทุนทรัพย์','พ.ต.อ.กิตติพงศ์ พันธ์ศรี']},
@@ -158,7 +158,7 @@ function openForm(id){
   <label>การแต่งกาย</label><input id="f_dress" value="${esc(m.dress)}">
   <label>สิ่งที่ต้องเตรียม</label><textarea id="f_prepare" rows="2">${esc(m.prepare)}</textarea>
   <label>หมายเหตุ</label><textarea id="f_note" rows="2">${esc(m.note)}</textarea>
-  <label>ผู้บันทึก (ต้องลงชื่อ)</label><input id="f_recorder" value="${esc(m.recorder)}">
+  <label>ผู้บันทึก (ลงชื่อ)</label><input id="f_recorder" value="${esc(m.recorder)}">
   <label>รหัสเข้าบันทึกข้อมูล</label><input type="password" id="f_code" inputmode="numeric">
   <div class="bar" style="margin-top:12px"><button class="gr" onclick="closeForm()">← ย้อนกลับ</button><button id="f_save" onclick="save('${id||''}')">บันทึก</button></div>`;
   $('#modal').style.display='block';typeCh();
